@@ -19,7 +19,7 @@ public class Scanner : IScanner
         if (File.Exists(path))
         {
             FileInfo file = new FileInfo(path);
-            return new Node(file.Name, file.FullName, file.Length);
+            return new Node(file.Name, file.FullName, file.Length, null);
         }
 
         if (!Directory.Exists(path))
@@ -30,7 +30,7 @@ public class Scanner : IScanner
         _semaphore = new SemaphoreSlim(threadCount);
         
         DirectoryInfo directoryInfo = new DirectoryInfo(path);
-        Node root = new Node(directoryInfo.Name, directoryInfo.FullName);
+        Node root = new Node(directoryInfo.Name, directoryInfo.FullName, null);
         
         Scan(root);
         do
@@ -56,22 +56,32 @@ public class Scanner : IScanner
         DirectoryInfo[] childrenDirectories = currentDirectory.GetDirectories();
         foreach (var directory in childrenDirectories)
         {
-            Node childNode = new Node(directory.Name, directory.FullName);
+            Node childNode = new Node(directory.Name, directory.FullName, node);
             node.ChildrenNodes.Add(childNode);
             _queue.Enqueue(childNode);
         }
 
         FileInfo[] files = currentDirectory.GetFiles();
+        long dirLength = 0;
         foreach (var file in files)
         {
+            //TODO
             if (file.LinkTarget != null)
             {
                 continue;
             }
 
             long fileLength = file.Length;
-            node.ChildrenNodes.Add(new Node(file.Name, file.FullName, fileLength));
-            //node.Size += fileLength;
+            node.ChildrenNodes.Add(new Node(file.Name, file.FullName, fileLength, node));
+            dirLength += fileLength;
+        }
+
+        node.Size = dirLength;
+        
+        while (node.Parent != null)
+        {
+            node.Parent.Size += dirLength;
+            node = node.Parent;
         }
     }
 
