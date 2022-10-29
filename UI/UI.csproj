@@ -8,10 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ApplicationDefinition Include="View\App.xaml">
-        <Generator>MSBuild:Compile</Generator>
-        <XamlRuntime>Wpf</XamlRuntime>
-      </ApplicationDefinition>
+      <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Core\Core.csproj" />
     </ItemGroup>
 
 </Project>
