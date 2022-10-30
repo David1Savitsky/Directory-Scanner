@@ -3,6 +3,6 @@
 public interface IFileSystemObject
 {
     string Name { get; }
-    string Size { get; }
+    long Size { get; }
     double Percentage { get; }
 }
