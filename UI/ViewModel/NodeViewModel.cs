@@ -24,7 +24,6 @@ public class NodeViewModel : INotifyPropertyChanged
         set
         {
             _scanningPath = value;
-            OnPropertyChanged(nameof(ScanningPath));
         }
     }
 
@@ -35,7 +34,7 @@ public class NodeViewModel : INotifyPropertyChanged
         private set
         {
             _root = value;
-            OnPropertyChanged(nameof(Root));
+            OnPropertyChanged();
         }
     }
     
@@ -54,14 +53,14 @@ public class NodeViewModel : INotifyPropertyChanged
             var result = _scanner.StartScan(ScanningPath, ThreadCount);
             Root = new ResultTree(result);
         });
-
+        OnPropertyChanged(ScanningPath);
     }
 
     public ICommand CancelCommand => new OpenFileCommand(_ => Cancel());
 
     private void Cancel()
     {
-        
+        _scanner.CancelScan();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

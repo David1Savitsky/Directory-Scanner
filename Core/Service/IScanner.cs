@@ -5,5 +5,5 @@ namespace Core.Service;
 public interface IScanner
 {
     Node StartScan(string path, int threadCount);
-    void StopScan();
+    void CancelScan();
 }

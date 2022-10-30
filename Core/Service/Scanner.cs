@@ -7,6 +7,7 @@ namespace Core.Service;
 public class Scanner : IScanner
 {
     private ConcurrentQueue<Node> _queue = new ConcurrentQueue<Node>();
+    private CancellationTokenSource _tokenSource = new CancellationTokenSource();
     private SemaphoreSlim _semaphore;
 
     public Node StartScan(string path, int threadCount)
@@ -28,28 +29,35 @@ public class Scanner : IScanner
         }
 
         _semaphore = new SemaphoreSlim(threadCount);
+        CancellationToken token = _tokenSource.Token;
         
         DirectoryInfo directoryInfo = new DirectoryInfo(path);
         Node root = new Node(directoryInfo.Name, directoryInfo.FullName, null);
         
-        Scan(root);
+        Scan(root, token);
         do
         {
             if (_queue.TryDequeue(out var node))
             {
-                _semaphore.Wait();
+                _semaphore.Wait(token);
                 Task.Run(() =>
                 {
-                    Scan(node);
+                    Scan(node, token);
                     _semaphore.Release();
-                }); 
+                }, token);
             }
-        } while (_semaphore.CurrentCount != threadCount || !_queue.IsEmpty);
+        } while (!token.IsCancellationRequested &&
+                 (_semaphore.CurrentCount != threadCount || !_queue.IsEmpty));
         
         return root;
     }
 
-    private void Scan(Node node)
+    public void CancelScan()
+    {
+        _tokenSource.Cancel();
+    }
+
+    private void Scan(Node node, CancellationToken token)
     {
         DirectoryInfo currentDirectory = new DirectoryInfo(node.FullPath);
         
@@ -65,6 +73,10 @@ public class Scanner : IScanner
             
         foreach (var directory in childrenDirectories)
         {
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
             Node childNode = new Node(directory.Name, directory.FullName, node);
             node.ChildrenNodes.Add(childNode);
             _queue.Enqueue(childNode);
@@ -74,6 +86,10 @@ public class Scanner : IScanner
         long dirLength = 0;
         foreach (var file in files)
         {
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
             long fileLength = 0;
             if (file.Extension != ".lnk")
             {
@@ -91,10 +107,5 @@ public class Scanner : IScanner
             node.Parent.Size += dirLength;
             node = node.Parent;
         }
-    }
-
-    public void StopScan()
-    {
-        throw new NotImplementedException();
     }
 }
