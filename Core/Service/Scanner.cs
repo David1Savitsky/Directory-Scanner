@@ -53,7 +53,16 @@ public class Scanner : IScanner
     {
         DirectoryInfo currentDirectory = new DirectoryInfo(node.FullPath);
         
-        DirectoryInfo[] childrenDirectories = currentDirectory.GetDirectories();
+        DirectoryInfo[] childrenDirectories;
+        try
+        {
+            childrenDirectories = currentDirectory.GetDirectories();
+        }
+        catch (Exception e)
+        {
+            return;
+        }
+            
         foreach (var directory in childrenDirectories)
         {
             Node childNode = new Node(directory.Name, directory.FullName, node);
@@ -65,13 +74,12 @@ public class Scanner : IScanner
         long dirLength = 0;
         foreach (var file in files)
         {
-            //TODO
-            if (file.LinkTarget != null)
+            long fileLength = 0;
+            if (file.Extension != ".lnk")
             {
-                continue;
+                fileLength = file.Length;
             }
-
-            long fileLength = file.Length;
+            
             node.ChildrenNodes.Add(new Node(file.Name, file.FullName, fileLength, node));
             dirLength += fileLength;
         }
