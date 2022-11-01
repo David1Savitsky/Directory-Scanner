@@ -39,12 +39,19 @@ public class Scanner : IScanner
         {
             if (_queue.TryDequeue(out var node))
             {
-                _semaphore.Wait(token);
-                Task.Run(() =>
+                try
                 {
-                    Scan(node, token);
-                    _semaphore.Release();
-                }, token);
+                    _semaphore.Wait(token);
+                    Task.Run(() =>
+                    {
+                        Scan(node, token);
+                        _semaphore.Release();
+                    }, token);
+                }
+                catch (Exception)
+                {
+                    
+                }
             }
         } while (!token.IsCancellationRequested &&
                  (_semaphore.CurrentCount != threadCount || !_queue.IsEmpty));
