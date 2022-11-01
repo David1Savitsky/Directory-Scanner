@@ -80,6 +80,7 @@ public class Tests
         Node nodeWithCanceling = null;
         Scanner _scannerWithCanceling = new Scanner();
         var task = Task.Run(() => nodeWithCanceling = _scannerWithCanceling.StartScan("X:/", 10));
+        Thread.Sleep(100);
         _scannerWithCanceling.CancelScan();
         Task.WaitAll(task);
         Assert.That(nodeWithoutCanceling.Size, Is.GreaterThan(nodeWithCanceling.Size));
