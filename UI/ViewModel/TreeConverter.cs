@@ -45,25 +45,4 @@ public class TreeConverter
 
         return fileSystemObject;
     }
-    
-    /*public IFileSystemObject CreateDtoNode(Node node, long parentSize)
-    {
-        IFileSystemObject newNode;
-        var sizeInPercent = (double)node.Size / parentSize * 100;
-        sizeInPercent = double.IsNaN(sizeInPercent) ? 0 : sizeInPercent;
-        if (node.ChildrenNodes.Count == 0)
-        {
-            newNode = new File(node.Name, node.Size, sizeInPercent);
-        }
-        else
-        {
-            newNode = new Directory(node.Name, node.Size, sizeInPercent);
-            foreach (var child in node.ChildrenNodes)
-            {
-                ((Directory)newNode).ChildrenNodes.Add(CreateDtoNode(child, node.Size));
-            }
-        }
-
-        return newNode;
-    }*/
 }
