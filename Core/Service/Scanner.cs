@@ -6,8 +6,8 @@ namespace Core.Service;
 
 public class Scanner : IScanner
 {
-    private ConcurrentQueue<Node> _queue = new ConcurrentQueue<Node>();
-    private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+    private ConcurrentQueue<Node> _queue;
+    private CancellationTokenSource _tokenSource;
     private SemaphoreSlim _semaphore;
 
     public Node StartScan(string path, int threadCount)
@@ -28,6 +28,8 @@ public class Scanner : IScanner
             throw new InvalidPathException("Path: " + path);
         }
 
+        _queue = new ConcurrentQueue<Node>();
+        _tokenSource = new CancellationTokenSource();
         _semaphore = new SemaphoreSlim(threadCount);
         CancellationToken token = _tokenSource.Token;
         
@@ -39,19 +41,12 @@ public class Scanner : IScanner
         {
             if (_queue.TryDequeue(out var node))
             {
-                try
+                _semaphore.Wait(token);
+                Task.Run(() =>
                 {
-                    _semaphore.Wait(token);
-                    Task.Run(() =>
-                    {
-                        Scan(node, token);
-                        _semaphore.Release();
-                    }, token);
-                }
-                catch (Exception)
-                {
-                    
-                }
+                    Scan(node, token);
+                    _semaphore.Release();
+                }, token);
             }
         } while (!token.IsCancellationRequested &&
                  (_semaphore.CurrentCount != threadCount || !_queue.IsEmpty));
